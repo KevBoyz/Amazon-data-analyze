@@ -5,13 +5,17 @@ import requests as r
 from selenium.webdriver import Chrome
 from selenium.webdriver.common import by
 from os import getlogin
+from pyautogui import press
 
 
-def bad_status(link, browser):  # Request error case, use selenium
-    values = []
-    browser.get(link)
-    sleep(2)
+def amazon_scrap(search, browser):
+    browser.get('https://www.amazon.com')
+    browser.implicitly_wait(30)
+    browser.find_element(by.By.ID, 'twotabsearchtextbox').send_keys(search)
+    press('enter')
+    sleep(5)
     divs = browser.find_elements(by.By.CSS_SELECTOR, '[class="a-section"]')
+    values = []
     for c in range(len(divs)):
         code = bs4.BeautifulSoup(divs[c].get_attribute('outerHTML'), 'html.parser')
         title = code.find('span', 'a-size-medium a-color-base a-text-normal')
@@ -22,29 +26,32 @@ def bad_status(link, browser):  # Request error case, use selenium
             pass
     if values:
         df = pd.DataFrame(values, columns=['Product Names', 'Prices'])
-        print(f'\n{df}')
+        print(f'\n{df}\n')
     else:
         print('Error: Can\'t locate html elements on this page')
-        print('Try a link like this: https://www.amazon.com/s?k=pc')
+        print('Check if the page looks like this: https://www.amazon.com/s?k=pc')
+        print('This script don\'t work for some Amazon pages, try search for another thing\n')
 
 
-def start(link):
+def start(search):
     try:
-        site = r.get(link)
-        if site.status_code == 404:
-            print('Not found 404')
+        amazon = r.get('https://www.amazon.com')
+        if amazon.status_code == 404:
+            print('Not found 404\n')
         else:
-            bad_status(link, Chrome())
+            amazon_scrap(search, Chrome())
     except Exception as e:
         print(e)
 
 
 while True:
-    am_link = str(input('Amazon Search: ')).strip().lower()
-    if am_link.find('www.amazon.com') == -1:
-        print('\nError: Invalid Url, needs point to to amazon.com')
-        print('Try a link like this: https://www.amazon.com/s?k=pc\n')
+    search = str(input('Search for: ')).strip().lower()
+    if search.find('www.amazon.com') != -1 or search.find('https://www.') != -1:
+        print('\nError: This input don\'t accept URL\'s')
+        print('Do a search like: \"pc\" or \"cpu\"\n')
     else:
-        break
-start(am_link)
+        if search == '--exit':
+            break
+        else:
+            start(search)
 input(f'\n/{getlogin()}> [Press ENTER to exit] ~ ')
