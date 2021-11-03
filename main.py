@@ -28,16 +28,19 @@ def amazon_scrap(search, browser):
         df = pd.DataFrame(values, columns=['Product Names', 'Prices'])
         print(f'\n{df}\n')
     else:
-        print('Error: Can\'t locate html elements on this page')
+        print('\nError: Can\'t locate html elements on this page')
         print('Check if the page looks like this: https://www.amazon.com/s?k=pc')
-        print('This script don\'t work for some Amazon pages, try search for another thing\n')
+        print('This script don\'t work for some Amazon pages, try search for hardware\n')
+
+
+def submarino_scrap(search):
+    ...
 
 
 def start(search):
     try:
-        amazon = r.get('https://www.amazon.com')
-        if amazon.status_code == 404:
-            print('Not found 404\n')
+        if r.get('https://www.amazon.com').status_code == 404:
+            print('Error: [https://www.amazon.com] Not found 404\n')
         else:
             amazon_scrap(search, Chrome())
     except Exception as e:
