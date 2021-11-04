@@ -7,6 +7,8 @@ from selenium.webdriver.common import by
 from os import getlogin
 from pyautogui import press
 
+# requests exceptions
+
 
 def amazon_scrap(search, browser):
     browser.get('https://www.amazon.com')
@@ -39,7 +41,8 @@ def submarino_scrap(search):
 
 def start(search):
     try:
-        if r.get('https://www.amazon.com').status_code == 404:
+        amazon = r.get('https://www.amazon.com')
+        if amazon.status_code == 404:
             print('Error: [https://www.amazon.com] Not found 404\n')
         else:
             amazon_scrap(search, Chrome())
