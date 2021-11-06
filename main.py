@@ -8,6 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from os import getlogin
 from pyautogui import press
 from math import ceil
+import matplotlib.pyplot as plt
 
 
 def amazon_scrap(search, browser):
@@ -28,7 +29,7 @@ def amazon_scrap(search, browser):
             pass
     if values:
         df = pd.DataFrame(values, columns=['Product Names', 'Prices'])
-        print(f'\nAmazon total price: {ceil(df["Prices"].sum())} ({len(values)} items)')
+        return [ceil(df["Prices"].mean()), len(values), ceil(df["Prices"].sum())]
     else:
         print('\nError: Can\'t locate html elements on this page')
         print('Check if the page looks like this: https://www.amazon.com/s?k=pc')
@@ -71,7 +72,7 @@ def shopee_scrap(search, browser):
                 print(e)
     if values:
         df = pd.DataFrame(values, columns=['Product Names', 'Prices'])
-        print(f'\nShopee total price: {ceil(df["Prices"].sum())} ({len(values)} items)')
+        return [ceil(df["Prices"].mean()), len(values), ceil(df["Prices"].sum())]
     else:
         print('\nError: Can\'t locate html elements on this page (shopee.com)')
 
@@ -83,8 +84,25 @@ def start(search):
         if amazon.status_code == 404:
             print('Error: [https://www.amazon.com] Not found 404\n')
         else:
-            amazon_scrap(search, Chrome())
-            shopee_scrap(search, Chrome())
+            data = [
+                amazon_scrap(search, Chrome()),
+                shopee_scrap(search, Chrome())
+            ]
+            dt_tb = pd.DataFrame(
+                data,
+                columns=['Prices media', 'Items analyzed', 'Sum of all'],
+                index=['Amazon', 'Shopee']
+            )
+            print(dt_tb)
+            plt.bar(
+                ['Prices media', 'Prices media2', 'Items analyzed', 'Items analyzed2'],
+                [
+                    dt_tb['Prices media'].values[0], dt_tb['Prices media'].values[1],
+                    dt_tb['Items analyzed'].values[0], dt_tb['Items analyzed'].values[1],
+                ]
+            )
+            plt.show()
+
     except Exception as e:
         print(e)
 
