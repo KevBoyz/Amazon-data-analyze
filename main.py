@@ -12,18 +12,24 @@ import matplotlib.pyplot as plt
 
 
 def amazon_scrap(search, browser):
+    global div_class, title_class, price_class
     browser.get('https://www.amazon.com')  # Opening the site on a browser
     browser.implicitly_wait(30)  # Max time to wait the load
     browser.find_element(by.By.ID, 'twotabsearchtextbox').send_keys(search)  # Find and use the search bar
     press('enter')  # send the keys
     values = []  # 30-72 items
+    sleep(3)
+   # if not browser.find_elements(by.By.CSS_SELECTOR, '[class="sg-col-inner"]'):  # Page type: commmon
+        # div_class = '[class="sg-col-inner"]'
+    # else:  # Page type: Hardware
+        # div_class = '[class="a-section"]'
     for p in range(0, 6):  # Run the first 6 search pages
         sleep(2)
-        divs = browser.find_elements(by.By.CSS_SELECTOR, '[class="a-section"]')  # Find all items
+        divs = browser.find_elements(by.By.CSS_SELECTOR, '[class="sg-col-inner"]')  # Find all items
         for c in range(len(divs)):  # Get data of the item
             code = bs4.BeautifulSoup(divs[c].get_attribute('outerHTML'), 'html.parser')
-            title = code.find('span', 'a-size-medium a-color-base a-text-normal')
-            price = code.find('span', 'a-price-whole')
+            title = code.find('span', 'a-size-base a-color-base a-text-normal')  # Change
+            price = code.find('span', 'a-price-whole')  # Change
             try:
                 values.append([title.text, int(str(price.text).replace('.', ''))])
             except Exception as e:
