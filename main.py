@@ -19,7 +19,7 @@ def amazon_scrap(search, browser):
     press('enter')  # send the keys
     values = []  # 30-72 items
     sleep(3)
-   # if not browser.find_elements(by.By.CSS_SELECTOR, '[class="sg-col-inner"]'):  # Page type: commmon
+   # if bool(browser.find_elements(by.By.CSS_SELECTOR, '[class="sg-col-inner"]')):  # Page type: commmon
         # div_class = '[class="sg-col-inner"]'
     # else:  # Page type: Hardware
         # div_class = '[class="a-section"]'
@@ -28,8 +28,8 @@ def amazon_scrap(search, browser):
         divs = browser.find_elements(by.By.CSS_SELECTOR, '[class="sg-col-inner"]')  # Find all items
         for c in range(len(divs)):  # Get data of the item
             code = bs4.BeautifulSoup(divs[c].get_attribute('outerHTML'), 'html.parser')
-            title = code.find('span', 'a-size-base a-color-base a-text-normal')  # Change
-            price = code.find('span', 'a-price-whole')  # Change
+            title = code.find('span', 'a-text-normal')
+            price = code.find('span', 'a-price-whole')
             try:
                 values.append([title.text, int(str(price.text).replace('.', ''))])
             except Exception as e:
