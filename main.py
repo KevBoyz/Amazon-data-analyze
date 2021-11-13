@@ -9,6 +9,7 @@ from os import getlogin
 from pyautogui import press
 from math import ceil
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 
 def amazon_scrap(search, browser):
@@ -91,19 +92,24 @@ def graph_output(search, data):
         data,
         columns=['Prices media', 'Items analyzed', 'Sum of all'],
         index=['Amazon', 'Shopee']
-    )  # Generating gui graphics - Amazon, Shopee, x?
+    )
     items_analyzed = dt_tb['Items analyzed'].values  # Values iterator
+    prices_media = dt_tb['Prices media'].values  # Values iterator
+    file = open('database.txt', 'r+')  # Saving the data -- on a text file
+    file.write(f'{datetime.now().minute} {prices_media[0]} {prices_media[1]}\n')
+    for line in file.readlines():
+        print(line)
+    file.close()
     plt.pie(  # Relation of items processed for each site scraped
         [items_analyzed[0], items_analyzed[1]],  # Values
         labels=['Amazon', 'Shopee'],  # Labels
         autopct="%1.2f%%",  # Show the percentage
         colors=['orange', 'red'],  # Define the colors
-    )
+    )  # Generating gui graphics - Amazon, Shopee, x?  (consider this on line +- 97)
     plt.title(f'Items processed for site - Search tab: \"{search}\"')
     plt.xlabel(f'Total of items captured: {dt_tb["Items analyzed"].values[0] + dt_tb["Items analyzed"].values[1]}')
     plt.ylabel(f' Amazon: {items_analyzed[0]}{" "*30}\nShopee: {items_analyzed[1]}{" "*30}').set_rotation(0)
     plt.show()
-    prices_media = dt_tb['Prices media'].values  # Values iterator
     plt.bar(  # Prices media graph (bars)
         ['Amazon', 'Shopee'],  # Legends, values
         [prices_media[0], prices_media[1]],
@@ -130,6 +136,23 @@ def start(search):
 
 
 while True:  # Program interface
+    points = []
+    amazon_l = []
+    shp_l = []
+    file = open('database.txt', 'r')
+    for line in file.readlines():
+        line_read = line.split()
+        for v in range(len(line_read)):  # Converting values to integers
+            if v > 0:
+                line_read[v] = int(line_read[v])
+        points.append(line_read[0])
+        amazon_l.append(line_read[1])
+        shp_l.append(line_read[2])
+    print(amazon_l)
+    print(points)
+    plt.plot(points, amazon_l, marker='o')
+    plt.plot(points, shp_l, marker='o')
+    plt.show()
     search = str(input('\nSearch for: ')).strip()
     if search.find('www.amazon.com') != -1 or search.find('https://www.') != -1:  # Invalid values processing
         print('\nError: This input don\'t accept URL\'s')
