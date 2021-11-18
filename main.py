@@ -9,10 +9,9 @@ from os import getlogin
 from pyautogui import press
 from math import ceil
 import matplotlib.pyplot as plt
-import numpy as np
 
 
-def amazon_scrap(search, browser):
+def amazon_scrap(search, browser, pagesToTun=1):
     global div_class, title_class, price_class
     browser.get('https://www.amazon.com')  # Opening the site on a browser
     browser.implicitly_wait(30)  # Max time to wait the load
@@ -20,7 +19,7 @@ def amazon_scrap(search, browser):
     press('enter')  # send the keys
     values = []  # 30-72 items
     sleep(3)
-    for p in range(0, 6):  # Run the first 6 search pages -- 120-300 elements
+    for p in range(0, pagesToTun):  # 6 search pages = 120-300 elements
         sleep(2)
         divs = browser.find_elements(by.By.CSS_SELECTOR, '[class="sg-col-inner"]')  # Find all items
         for c in range(len(divs)):  # Get data of the item
@@ -126,10 +125,10 @@ def graph_output(search, data):
             line_iter = line.split()
             for i in range(len(line_iter)):
                 line_iter[i] = int(line_iter[i])
-                if i % 2 != 0:
-                    amazon_l.append(line_iter[i])
-                else:
+                if i % 2 != 0:  # [1]
                     shp_l.append(line_iter[i])
+                else:  # [0]
+                    amazon_l.append(line_iter[i])
     file.close()
     plt.figure(facecolor='#cccccc')
     ax = plt.axes()
@@ -150,7 +149,7 @@ def start(search):
             print('Error: [https://www.amazon.com] Not found 404\n')
         else:  # Automation initialization
             data = [
-                amazon_scrap(search, Chrome()),
+                amazon_scrap(search, Chrome(), 2),
                 shopee_scrap(search, Chrome())
             ]
             graph_output(search, data)  # Show the results
