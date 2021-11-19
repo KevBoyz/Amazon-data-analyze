@@ -1,27 +1,38 @@
-import bs4
-import pandas as pd
-from time import sleep
-import requests as r
-from selenium.webdriver import Chrome
-from selenium.webdriver.common import by
+import logging as lg
+
+lg.basicConfig(level=lg.INFO, format='[Log] %(msg)s')
+
+lg.info('Importing dependences...')
+
 from selenium.webdriver.common.keys import Keys
-from pyautogui import press
-from math import ceil
+from selenium.webdriver.common import by
+from selenium.webdriver import Chrome
 import matplotlib.pyplot as plt
+from pyautogui import press
 import PySimpleGUI as sg
+from time import sleep
+from math import ceil
+import requests as r
+import pandas as pd
 from gui import *
+import bs4
 
 
 def amazon_scrap(search, browser, pagesToTun=1):
     global div_class, title_class, price_class
+    lg.info('Opening [Amazon]')
     browser.get('https://www.amazon.com')  # Opening the site on a browser
+    lg.info('Waiting the load...')
     browser.implicitly_wait(30)  # Max time to wait the load
+    lg.info('Load complete, accessing the search bar')
     browser.find_element(by.By.ID, 'twotabsearchtextbox').send_keys(search)  # Find and use the search bar
     press('enter')  # send the keys
+    lg.info('Input submitted, waiting the load')
     values = []  # 30-72 items
     sleep(3)
     for p in range(0, pagesToTun):  # 6 search pages = 120-300 elements
         sleep(2)
+        lg.info(f'Capturing products of page: {p + 1}...')
         divs = browser.find_elements(by.By.CSS_SELECTOR, '[class="sg-col-inner"]')  # Find all items
         for c in range(len(divs)):  # Get data of the item
             code = bs4.BeautifulSoup(divs[c].get_attribute('outerHTML'), 'html.parser')
@@ -34,6 +45,7 @@ def amazon_scrap(search, browser, pagesToTun=1):
         ul = browser.find_element(by.By.CLASS_NAME, 'a-pagination')
         ul.find_element(by.By.CLASS_NAME, 'a-last').click()  # Go to next search page
     if values:  # All done, return the DataFrame resumed
+        lg.info('[Amazon] Scrape concluded, closing browser and saving data...')
         df = pd.DataFrame(values, columns=['Product Names', 'Prices'])
         return [ceil(df["Prices"].mean()), len(values), ceil(df["Prices"].sum())]
     else:  # ^ Prices media - items processed - total value of all items ^
@@ -43,16 +55,22 @@ def amazon_scrap(search, browser, pagesToTun=1):
 
 
 def shopee_scrap(search, browser):
+    lg.info('Opening [Shopee]')
     browser.get('https://shopee.com')
+    lg.info('Waiting the load')
     browser.implicitly_wait(30)
     try:
+        lg.info('Searching for pop up, if finds he will be closed')
         browser.find_element(by.By.CLASS_NAME, 'shopee-popup__close-btn').click()  # Close the popup, if you find it
     except:
         pass
+    lg.info('Load complete, accessing and using the search bar')
     browser.find_element(by.By.CLASS_NAME, 'shopee-searchbar-input__input').send_keys(search)  # Get and use to search
     press('enter')  # Send the keys
     sleep(4)  # Load time, this will be wbd wait in future like others sleep()
+    lg.info('Load complete, scraping the page 1')
     for c in range(0, 6):  # Run the page to render and load all items (55-60)
+        lg.info(f'Rendering products; progress ({c + 1}/6)')
         for p in range(0, 17):  # Press the down_arrow 17 times, do this 6 times
             press('down')  # If the user interact with the browser this will probably break
     divs = browser.find_elements(by.By.CSS_SELECTOR, '[class="col-xs-2-4 shopee-search-item-result__item"]')  # Get them
@@ -79,6 +97,7 @@ def shopee_scrap(search, browser):
             except Exception as e:  # If unexpected error occurred
                 print(e)
     if values:  # All done, return the info
+        lg.info('[Shopee] Scrape concluded, closing browser and saving data...')
         df = pd.DataFrame(values, columns=['Product Names', 'Prices'])
         return [ceil(df["Prices"].mean()), len(values), ceil(df["Prices"].sum())]
     else:
@@ -86,17 +105,20 @@ def shopee_scrap(search, browser):
 
 
 def graph_output(search, data):
+    lg.info('Reading data...')
     dt_tb = pd.DataFrame(  # Load DataFrame to extract info
         data,
         columns=['Prices media', 'Items analyzed', 'Sum of all'],
         index=['Amazon', 'Shopee']
     )
     items_analyzed = dt_tb['Items analyzed'].values  # Values iterator    (random ascii that I make; inset/spaceship)
-    prices_media = dt_tb['Prices media'].values  # Values iterator                     ##          \/-kh}---|k
+    prices_media = dt_tb['Prices media'].values  # Values iterator
+    lg.info('Archiving data...')  # ;-;                                                ##          \/-kh}---|k
     file = open('database.txt', 'a')  # Saving the data -- on a text file           --####  -       \/-eo}--|h
     file.write(f'{search}\n{prices_media[0]} {prices_media[1]}\n')  # #               #  ##          \/-vy}-|b
     file.close()  # Close                                                           --####  -         \/-bz}|y
-    plt.pie(  # Relation of items processed for each site scraped                      ##              \/\/\|z
+    lg.info('Generating graphics...')  # ;-; 2                                         ##              \/\/\|z
+    plt.pie(  # Relation of items processed for each site scraped
         [items_analyzed[0], items_analyzed[1]],  # Values
         labels=['Amazon', 'Shopee'],  # Labels
         autopct="%1.2f%%",  # Show the percentage
@@ -117,6 +139,7 @@ def graph_output(search, data):
     amazon_l = []
     shp_l = []
     file = open('database.txt', 'r')
+    lg.info('Loading database for generate plot graph')
     c = 0
     for line in file.readlines():
         c += 1
@@ -143,22 +166,26 @@ def graph_output(search, data):
 
 
 def start(search):
+    lg.info('Input received, testing sites response')
     try:
         amazon = r.get('https://www.amazon.com')  # Probably return 503
         # shopee = r.get('https://www.submarino.com')  # Too much time to respond
         if amazon.status_code == 404:
             print('Error: [https://www.amazon.com] Not found 404\n')
         else:  # Automation initialization
+            lg.info('All done, initializing the process')
             data = [
                 amazon_scrap(search, Chrome(), 2),
                 shopee_scrap(search, Chrome())
             ]
+            lg.info('Scan ended, processing the results')
             graph_output(search, data)  # Show the results
     except Exception as e:
         print(e)
 
 
 def gui():
+    lg.info('Done, waiting the user input')
     sg.theme('Dark Grey13')
     title = 'KevBoyz Tools      E-commerce Scraping'
     layout = [[title_bar(title, sg.theme_button_color()[0], sg.theme_button_color()[1])],
@@ -185,6 +212,7 @@ def gui():
 
 
 while True:  # Execution loop
+    lg.info('Loading graphical interface')
     search = str(gui()).strip()
     if search == 'None':
         quit(0)
@@ -193,3 +221,5 @@ while True:  # Execution loop
         print('Do a search like: \"pc\" or \"cpu\"\n')
     else:
         start(search)
+        lg.info('All concluded, restarting the loop')
+
