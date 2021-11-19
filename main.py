@@ -5,10 +5,11 @@ import requests as r
 from selenium.webdriver import Chrome
 from selenium.webdriver.common import by
 from selenium.webdriver.common.keys import Keys
-from os import getlogin
 from pyautogui import press
 from math import ceil
 import matplotlib.pyplot as plt
+import PySimpleGUI as sg
+from gui import *
 
 
 def amazon_scrap(search, browser, pagesToTun=1):
@@ -157,14 +158,38 @@ def start(search):
         print(e)
 
 
-while True:  # Program interface
-    search = str(input('\nSearch for: ')).strip()
-    if search.find('www.amazon.com') != -1 or search.find('https://www.') != -1:  # Invalid values processing
+def gui():
+    sg.theme('Dark Grey13')
+    title = 'KevBoyz Tools      E-commerce Scraping'
+    layout = [[title_bar(title, sg.theme_button_color()[0], sg.theme_button_color()[1])],
+              [sg.T('Search for:'), sg.Input(size=(35, 0))],
+              [sg.Button('Start', size=(40, 0))]]
+    window_main = sg.Window(title, layout, resizable=True, no_titlebar=True, grab_anywhere=True, keep_on_top=True,
+                            margins=(0, 0), finalize=True)
+    window_main['-TITLEBAR-'].expand(True, False, False)
+    while True:  # Event Loop
+        window, event, values = sg.read_all_windows(timeout=100)
+        if event == sg.WIN_CLOSED or event == 'Exit':
+            break
+        if event == '-MINIMIZE-':
+            minimize_main_window(window_main)
+            continue
+        elif event == '-RESTORE-' or (event == sg.WINDOW_CLOSED and window != window_main):
+            restore_main_window(window_main)
+            continue
+        else:
+            if event == 'Start':  # Button event
+                window.close()
+                return values[0]
+    window.close()
+
+
+while True:  # Execution loop
+    search = str(gui()).strip()
+    if search == 'None':
+        quit(0)
+    elif search.find('www.amazon.com') != -1 or search.find('https://www.') != -1:  # Invalid values processing
         print('\nError: This input don\'t accept URL\'s')
         print('Do a search like: \"pc\" or \"cpu\"\n')
     else:
-        if search == '--exit':
-            break
-        else:
-            start(search)
-input(f'\n/{getlogin()}> [Press ENTER to exit] ~ ')
+        start(search)
