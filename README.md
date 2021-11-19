@@ -24,9 +24,10 @@ browser version, download the appropriate version from [chromium.org](https://ch
 and replace the file in the script folder.
 
 ### Install dependencies (packages):
+* `pip install pysimplegui`
+* `pip install matplotlib`
 * `pip install pyautogui`
 * `pip install selenium`
-* `pip install matplotlib`
 * `pip install pandas`
 * `pip install bf4`
 
