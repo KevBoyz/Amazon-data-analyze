@@ -8,7 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common import by
 from selenium.webdriver import Chrome
 import matplotlib.pyplot as plt
-from pyautogui import press
+from pyautogui import press, click
 import PySimpleGUI as sg
 from time import sleep
 from math import ceil
@@ -58,12 +58,9 @@ def shopee_scrap(search, browser):
     lg.info('Opening [Shopee]')
     browser.get('https://shopee.com')
     lg.info('Waiting the load')
-    browser.implicitly_wait(30)
-    try:
-        lg.info('Searching for pop up, if finds he will be closed')
-        browser.find_element(by.By.CLASS_NAME, 'shopee-popup__close-btn').click()  # Close the popup, if you find it
-    except:
-        pass
+    # browser.implicitly_wait(30)
+    sleep(10)
+    click(180, 400) # close the pop up
     lg.info('Load complete, accessing and using the search bar')
     browser.find_element(by.By.CLASS_NAME, 'shopee-searchbar-input__input').send_keys(search)  # Get and use to search
     press('enter')  # Send the keys
@@ -95,7 +92,7 @@ def shopee_scrap(search, browser):
                             price = price[:-3]  # Remove .00
                     values.append([title.strip(), int(price.replace('.', '').replace('R$', ''))])
             except Exception as e:  # If unexpected error occurred
-                print(e)
+                pass
     if values:  # All done, return the info
         lg.info('[Shopee] Scrape concluded, closing browser and saving data...')
         df = pd.DataFrame(values, columns=['Product Names', 'Prices'])
@@ -180,8 +177,8 @@ def start(search):
             ]
             lg.info('Scan ended, processing the results')
             graph_output(search, data)  # Show the results
-    except Exception as e:
-        print(e)
+    except:
+        pass
 
 
 def gui():
